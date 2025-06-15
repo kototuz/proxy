@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "manifest_version": 3,
+  "name": "Proxy",
+  "action": { "default_title": "Set Proxy" },
+  "background": { "scripts": ["bg.js"] },
+  "permissions": [
+      "storage",
+      "proxy",
+      "management"
+  ]
+}
