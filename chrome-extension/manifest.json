@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "manifest_version": 3,
+  "name": "Proxy",
+  "action": { "default_title": "Set Proxy" },
+  "background": {
+      "service_worker": "bg.js",
+      "type": "module" 
+  },
+  "permissions": [
+      "storage",
+      "proxy",
+      "management"
+  ]
+}
