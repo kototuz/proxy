@@ -41,7 +41,9 @@ function setPacScriptWithProxy(proxy) {
     });
 
     const currentProxyId = (await browser.storage.local.get("proxyId")).proxyId;
-    proxyList[currentProxyId].checked = true;
+    if (currentProxyId !== undefined) {
+        proxyList[currentProxyId].checked = true;
+    }
 
     proxyList.addEventListener("input", details => {
         const proxy = details.target.parentElement.lastChild.textContent;
@@ -49,5 +51,18 @@ function setPacScriptWithProxy(proxy) {
 
         const proxyId = parseInt(details.target.id);
         browser.storage.local.set({ proxyId: proxyId });
+    });
+
+    const enableDisableBtn = document.getElementById("enable-disable");
+    enableDisableBtn.addEventListener("click", () => {
+        if (enableDisableBtn.textContent === "Disable") {
+            browser.proxy.settings.clear({});
+            enableDisableBtn.textContent = "Enable";
+        } else {
+            browser.storage.local.get("proxyId").then(resp => {
+                setPacScriptWithProxy(PROXIES[resp.proxyId]);
+                enableDisableBtn.textContent = "Disable";
+            });
+        }
     });
 })();
