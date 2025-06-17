@@ -20,17 +20,18 @@ function createProxyElement(proxy, id) {
     return div;
 }
 
-function setPacScriptWithProxy(proxy) {
-    fetch("pac.js").then(res => res.text()).then(text => {
-        const pacScriptWithProxy = `const PROXY = '${proxy}';\n` + text;
-        const blob = new Blob([pacScriptWithProxy]);
-        browser.proxy.settings.set({
-            scope: "regular",
-            value: {
-                proxyType: "autoConfig",
-                autoConfigUrl: URL.createObjectURL(blob)
-            }
-        });
+async function setPacScriptWithProxy(proxy) {
+    const pacScript = await (await fetch("pac.js")).text();
+    const pacScriptWithProxy = `const PROXY = '${proxy}';\n` + pacScript;
+    await browser.storage.local.set({ pacScript: pacScriptWithProxy });
+
+    const url = URL.createObjectURL(new Blob([pacScriptWithProxy], { type: "application/x-ns-proxy-autoconfig" }));
+    browser.proxy.settings.set({
+        scope: "regular",
+        value: {
+            proxyType: "autoConfig",
+            autoConfigUrl: url
+        }
     });
 }
 
