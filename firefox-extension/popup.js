@@ -15,12 +15,8 @@ function createProxyElement(proxy, id) {
     return div;
 }
 
-async function setPacScriptWithProxy(proxy) {
-    const pacScript = await (await fetch("pac.js")).text();
-    const pacScriptWithProxy = `const PROXY = '${proxy}';\n` + pacScript;
-    await browser.storage.local.set({ pacScript: pacScriptWithProxy });
-
-    const url = URL.createObjectURL(new Blob([pacScriptWithProxy], { type: "application/x-ns-proxy-autoconfig" }));
+function setPacScript(pacScript) {
+    const url = URL.createObjectURL(new Blob([pacScript], { type: "application/x-ns-proxy-autoconfig" }));
     browser.proxy.settings.set({
         scope: "regular",
         value: {
@@ -28,6 +24,15 @@ async function setPacScriptWithProxy(proxy) {
             autoConfigUrl: url
         }
     });
+}
+
+async function setPacScriptWithProxy(proxy) {
+    const pacScript = await (await fetch("pac.js")).text();
+    const pacScriptWithProxy = `const PROXY = '${proxy}';\n` + pacScript;
+    await browser.storage.local.set({ pacScript: pacScriptWithProxy });
+
+    const enabled = await (await browser.storage.local.get("enabled")).enabled;
+    if (enabled) setPacScript(pacScriptWithProxy);
 }
 
 (async () => {
@@ -52,15 +57,20 @@ async function setPacScriptWithProxy(proxy) {
     });
 
     const enableDisableBtn = document.getElementById("enable-disable");
+    var enabled = (await browser.storage.local.get("enabled")).enabled;
+    enableDisableBtn.textContent = enabled ? "Disable" : "Enable";
     enableDisableBtn.addEventListener("click", () => {
-        if (enableDisableBtn.textContent === "Disable") {
-            browser.proxy.settings.clear({});
+        if (enabled) {
             enableDisableBtn.textContent = "Enable";
+            browser.proxy.settings.clear({});
         } else {
-            browser.storage.local.get("proxyId").then(resp => {
-                setPacScriptWithProxy(PROXIES[resp.proxyId]);
-                enableDisableBtn.textContent = "Disable";
+            enableDisableBtn.textContent = "Disable";
+            browser.storage.local.get("pacScript").then(resp => {
+                setPacScript(resp.pacScript);
             });
         }
+
+        enabled = !enabled;
+        browser.storage.local.set({ enabled: enabled });
     });
 })();

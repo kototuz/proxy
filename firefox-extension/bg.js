@@ -1,18 +1,17 @@
-browser.storage.local.get("pacScript").then(data => {
+browser.runtime.onStartup.addListener(async () => {
+    const storage = await browser.storage.local.get();
+    if (!storage.enabled) return;
+
+    const url = URL.createObjectURL(new Blob([storage.pacScript], { type: "application/x-ns-proxy-autoconfig" }));
     browser.proxy.settings.set({
         scope: "regular",
         value: {
             proxyType: "autoConfig",
-            autoConfigUrl: URL.createObjectURL(new Blob([data.pacScript], { type: "application/x-ns-proxy-autoconfig" }))
+            autoConfigUrl: url
         }
-browser.runtime.onStartup.addListener(() => {
-    browser.storage.local.get("pacScript").then(data => {
-        browser.proxy.settings.set({
-            scope: "regular",
-            value: {
-                proxyType: "autoConfig",
-                autoConfigUrl: URL.createObjectURL(new Blob([data.pacScript], { type: "application/x-ns-proxy-autoconfig" }))
-            }
-        });
     });
+});
+
+browser.runtime.onInstalled.addListener(() => {
+    browser.storage.local.set({ enabled: true });
 });
