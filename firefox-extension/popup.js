@@ -1,8 +1,3 @@
-const PROXIES = [
-    // PLACE YOUR PROXIES HERE
-    // format: "PROXY <ip>:<port>"
-];
-
 function createProxyElement(proxy, id) {
     const input = document.createElement("input");
     input.type = "radio";
@@ -36,6 +31,8 @@ async function setPacScriptWithProxy(proxy) {
 }
 
 (async () => {
+    const PROXIES = await (await fetch("proxies.json")).json();
+
     const proxyList = document.getElementById("proxies");
     PROXIES.forEach((el, i) => {
         proxyList.appendChild(createProxyElement(el, i+""));
