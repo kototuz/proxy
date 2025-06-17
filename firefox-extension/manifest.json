@@ -11,5 +11,10 @@
       "storage",
       "proxy",
       "management"
-  ]
+  ],
+  "browser_specific_settings": {
+      "gecko": {
+          "id": "ivann1812@gmail.com"
+      }
+  }
 }
