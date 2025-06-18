@@ -6,6 +6,7 @@ export const ProxyType = {
 export async function trySetProxy() {
     const storage = await browser.storage.local.get();
     if (!storage.enabled) return;
+    if (storage.proxy === undefined) return;
 
     switch (storage.proxyType) {
         case ProxyType.PAC_SCRIPT:
