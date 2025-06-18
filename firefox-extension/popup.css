@@ -1,5 +1,6 @@
 html, body, button, select {
     font-family: monospace;
+    width: 200px;
 }
 
 #enable-disable, #proxy-type {
