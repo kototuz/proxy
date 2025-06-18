@@ -1,3 +1,5 @@
+import { trySetProxy } from "./set_proxy.js";
+
 function createProxyElement(proxy, id) {
     const input = document.createElement("input");
     input.type = "radio";
@@ -15,62 +17,45 @@ function createProxyElement(proxy, id) {
     return div;
 }
 
-function setPacScript(pacScript) {
-    const url = URL.createObjectURL(new Blob([pacScript], { type: "application/x-ns-proxy-autoconfig" }));
-    browser.proxy.settings.set({
-        scope: "regular",
-        value: {
-            proxyType: "autoConfig",
-            autoConfigUrl: url
-        }
-    });
-}
-
-async function setPacScriptWithProxy(proxy) {
-    const pacScript = await (await fetch("pac.js")).text();
-    const pacScriptWithProxy = `const PROXY = '${proxy}';\n` + pacScript;
-    await browser.storage.local.set({ pacScript: pacScriptWithProxy });
-
-    const enabled = await (await browser.storage.local.get("enabled")).enabled;
-    if (enabled) setPacScript(pacScriptWithProxy);
-}
-
 (async () => {
-    const PROXIES = await (await fetch("proxies.json")).json();
+    const proxies = await (await fetch("proxies.json")).json();
+    const storage = await browser.storage.local.get();
 
     const proxyList = document.getElementById("proxies");
-    PROXIES.forEach((el, i) => {
+    proxies.forEach((el, i) => {
         proxyList.appendChild(createProxyElement(el, i+""));
     });
-
-    const currentProxyId = (await browser.storage.local.get("proxyId")).proxyId;
-    if (currentProxyId !== undefined) {
-        proxyList[currentProxyId].checked = true;
+    if (storage.proxyId !== undefined) {
+        proxyList[storage.proxyId].checked = true;
     }
-
-    proxyList.addEventListener("input", details => {
+    proxyList.addEventListener("input", async (details) => {
         const proxy = details.target.parentElement.lastChild.textContent;
-        setPacScriptWithProxy(proxy);
-
         const proxyId = parseInt(details.target.id);
-        browser.storage.local.set({ proxyId: proxyId });
+        await browser.storage.local.set({ proxy: proxy, proxyId: proxyId });
+        trySetProxy();
     });
 
     const enableDisableBtn = document.getElementById("enable-disable");
-    var enabled = (await browser.storage.local.get("enabled")).enabled;
+    var enabled = storage.enabled;
     enableDisableBtn.textContent = enabled ? "Disable" : "Enable";
-    enableDisableBtn.addEventListener("click", () => {
+    enableDisableBtn.addEventListener("click", async () => {
         if (enabled) {
             enableDisableBtn.textContent = "Enable";
+            enabled = !enabled;
+            browser.storage.local.set({ enabled: enabled });
             browser.proxy.settings.clear({});
         } else {
             enableDisableBtn.textContent = "Disable";
-            browser.storage.local.get("pacScript").then(resp => {
-                setPacScript(resp.pacScript);
-            });
+            enabled = !enabled;
+            await browser.storage.local.set({ enabled: enabled });
+            trySetProxy();
         }
+    });
 
-        enabled = !enabled;
-        browser.storage.local.set({ enabled: enabled });
+    const proxyTypeSelect = document.getElementById("proxy-type");
+    proxyTypeSelect.selectedIndex = storage.proxyType;
+    proxyTypeSelect.addEventListener("change", async () => {
+        await browser.storage.local.set({ proxyType: proxyTypeSelect.selectedIndex });
+        trySetProxy();
     });
 })();

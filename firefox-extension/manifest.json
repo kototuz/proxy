@@ -2,7 +2,7 @@
   "version": "1.0",
   "manifest_version": 3,
   "name": "Proxy",
-  "background": { "scripts": ["bg.js"] },
+  "background": { "scripts": ["bg.js"], "type": "module" },
   "action": {
       "default_title": "Settings",
       "default_popup": "popup.html"
